@@ -21,18 +21,21 @@ jobs:
         with:
           dotnet-version: '3.x'
 
-      - name: Install ReportGenerator tool
-        run: dotnet tool install -g dotnet-reportgenerator-globaltool
+      - name: Install compatible ReportGenerator tool
+        run: dotnet tool install -g dotnet-reportgenerator --version 4.8.8
+        # Replace '4.8.8' with a version that is compatible with .NET Core 3.1
 
       - name: Build project
-        run: dotnet build --configuration Release
+        run: dotnet build --configuration Release ProjetoDeTeste/ProjetoDeTeste.csproj
+        # Adjusted the build command to specify the .csproj file path
 
       - name: Run tests with coverage
-        run: dotnet test --configuration Release --collect:"XPlat Code Coverage"
+        run: dotnet test --configuration Release --collect:"XPlat Code Coverage" ProjetoDeTeste/ProjetoDeTeste.csproj
+        # Adjusted the test command to specify the .csproj file path
 
       - name: Find latest coverage file
         run: |
-          testResultsDir=$(System.DefaultWorkingDirectory)/TestResults
+          testResultsDir=$(System.DefaultWorkingDirectory)/ProjetoDeTeste/ProjetoDeTeste/TestResults
           coverageFiles=$(find $testResultsDir -name 'coverage.cobertura.xml')
           if [ -z "$coverageFiles" ]; then
             echo 'Coverage file not found.'
@@ -42,16 +45,16 @@ jobs:
 
       - name: Generate HTML report
         run: |
-          reportOutput=$(System.DefaultWorkingDirectory)/Reports
-          reportgenerator "-reports:$reportInput" "-targetdir:$reportOutput" "-reporttypes:HTML"
+          reportOutput=$(System.DefaultWorkingDirectory)/ProjetoDeTeste/ProjetoDeTeste/Reports
+          dotnet reportgenerator "-reports:$reportInput" "-targetdir:$reportOutput" "-reporttypes:HTML"
 
       - name: Move directories
         run: |
-          mv $(System.DefaultWorkingDirectory)/TestResults $(System.DefaultWorkingDirectory)/destination
-          mv $(System.DefaultWorkingDirectory)/Reports $(System.DefaultWorkingDirectory)/destination
+          mv $(System.DefaultWorkingDirectory)/ProjetoDeTeste/ProjetoDeTeste/TestResults $(System.DefaultWorkingDirectory)/destination
+          mv $(System.DefaultWorkingDirectory)/ProjetoDeTeste/ProjetoDeTeste/Reports $(System.DefaultWorkingDirectory)/destination
 
       - name: Uninstall ReportGenerator tool
-        run: dotnet tool uninstall -g dotnet-reportgenerator-globaltool
+        run: dotnet tool uninstall -g dotnet-reportgenerator
 
       - name: Open report in browser
         run: |
