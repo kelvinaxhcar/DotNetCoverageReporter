@@ -48,7 +48,7 @@ jobs:
       - name: Generate HTML report
         run: |
           reportOutput=$(find . -name ProjetoDeTeste.csproj -printf "%h\n")/Reports
-          dotnet reportgenerator "-reports:$reportInput" "-targetdir:$reportOutput" "-reporttypes:HTML"
+          ~/.dotnet/tools/reportgenerator "-reports:$reportInput" "-targetdir:$reportOutput" "-reporttypes:HTML"
 
       - name: Move directories
         run: |
