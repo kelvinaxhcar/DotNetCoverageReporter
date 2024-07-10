@@ -59,13 +59,9 @@ jobs:
       - name: Uninstall ReportGenerator tool
         run: dotnet tool uninstall -g dotnet-reportgenerator-globaltool
 
-      - name: Open report in browser
-        run: |
-          reportPath=$(find . -name ProjetoDeTeste.csproj -printf "%h\n")/Reports/index.html
-          echo "Looking for report at $reportPath"
-          if [ -f "$reportPath" ]; then
-            echo "Opening report in browser..."
-            xdg-open "file://$(pwd)/$reportPath"
-          else
-            echo "Report file $reportPath not found."
-          fi
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-report
+          path: |
+            $(find . -name ProjetoDeTeste.csproj -printf "%h\n")/Reports
