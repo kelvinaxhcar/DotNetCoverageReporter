@@ -21,17 +21,19 @@ jobs:
         with:
           dotnet-version: '3.x'
 
-      - name: Install compatible ReportGenerator tool
-        run: dotnet tool install -g dotnet-reportgenerator --version 4.8.8
-        # Replace '4.8.8' with a version that is compatible with .NET Core 3.1
+      - name: Install ReportGenerator tool
+        run: |
+          dotnet tool install -g dotnet-reportgenerator-globaltool --version 4.8.8
+          if [ $? -ne 0 ]; then
+            echo "Failed to install dotnet-reportgenerator-globaltool"
+            exit 1
+          fi
 
       - name: Build project
         run: dotnet build --configuration Release ProjetoDeTeste/ProjetoDeTeste.csproj
-        # Adjusted the build command to specify the .csproj file path
 
       - name: Run tests with coverage
         run: dotnet test --configuration Release --collect:"XPlat Code Coverage" ProjetoDeTeste/ProjetoDeTeste.csproj
-        # Adjusted the test command to specify the .csproj file path
 
       - name: Find latest coverage file
         run: |
@@ -54,7 +56,7 @@ jobs:
           mv $(System.DefaultWorkingDirectory)/ProjetoDeTeste/ProjetoDeTeste/Reports $(System.DefaultWorkingDirectory)/destination
 
       - name: Uninstall ReportGenerator tool
-        run: dotnet tool uninstall -g dotnet-reportgenerator
+        run: dotnet tool uninstall -g dotnet-reportgenerator-globaltool
 
       - name: Open report in browser
         run: |
