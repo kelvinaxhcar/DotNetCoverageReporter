@@ -1,60 +1,64 @@
-trigger:
-  branches:
-    include:
+name: .NET CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
       - main
 
-pool:
-  vmImage: 'ubuntu-latest'
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-steps:
-  - task: UseDotNet@2
-    displayName: 'Use .NET SDK'
-    inputs:
-      packageType: 'sdk'
-      version: '3.x'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-  - script: dotnet tool install -g dotnet-reportgenerator-globaltool
-    displayName: 'Install ReportGenerator'
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.x'
 
-  - script: dotnet build
-    displayName: 'Build project'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/path/to/your/project'
+      - name: Install ReportGenerator tool
+        run: dotnet tool install -g dotnet-reportgenerator-globaltool
 
-  - script: dotnet test --collect:"XPlat Code Coverage"
-    displayName: 'Run tests with coverage'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/path/to/your/project'
+      - name: Build project
+        run: dotnet build --configuration Release
 
-  - script: |
-      echo 'Searching for latest coverage file...'
-      testResultsDir=$(System.DefaultWorkingDirectory)/path/to/your/project/TestResults
-      coverageFiles=$(find $testResultsDir -name 'coverage.cobertura.xml')
-      if [ -z "$coverageFiles" ]; then
-        echo 'Coverage file not found.'
-        exit 1
-      fi
-      reportInput=$(ls -t $coverageFiles | head -n1)
-    displayName: 'Find latest coverage file'
+      - name: Run tests with coverage
+        run: dotnet test --configuration Release --collect:"XPlat Code Coverage"
 
-  - script: |
-      reportOutput=$(System.DefaultWorkingDirectory)/path/to/your/project/Reports
-      reportgenerator "-reports:$reportInput" "-targetdir:$reportOutput" "-reporttypes:HTML"
-    displayName: 'Generate HTML report'
+      - name: Find latest coverage file
+        run: |
+          testResultsDir=$(System.DefaultWorkingDirectory)/TestResults
+          coverageFiles=$(find $testResultsDir -name 'coverage.cobertura.xml')
+          if [ -z "$coverageFiles" ]; then
+            echo 'Coverage file not found.'
+            exit 1
+          fi
+          reportInput=$(ls -t $coverageFiles | head -n1)
 
-  - script: |
-      echo 'Moving TestResults and Reports directories...'
-      mv $(System.DefaultWorkingDirectory)/path/to/your/project/TestResults $(System.DefaultWorkingDirectory)/path/to/destination
-      mv $(System.DefaultWorkingDirectory)/path/to/your/project/Reports $(System.DefaultWorkingDirectory)/path/to/destination
-    displayName: 'Move directories'
+      - name: Generate HTML report
+        run: |
+          reportOutput=$(System.DefaultWorkingDirectory)/Reports
+          reportgenerator "-reports:$reportInput" "-targetdir:$reportOutput" "-reporttypes:HTML"
 
-  - script: dotnet tool uninstall -g dotnet-reportgenerator-globaltool
-    displayName: 'Uninstall ReportGenerator'
+      - name: Move directories
+        run: |
+          mv $(System.DefaultWorkingDirectory)/TestResults $(System.DefaultWorkingDirectory)/destination
+          mv $(System.DefaultWorkingDirectory)/Reports $(System.DefaultWorkingDirectory)/destination
 
-  - script: |
-      indexFile=$(System.DefaultWorkingDirectory)/path/to/destination/Reports/index.html
-      if [ -f "$indexFile" ]; then
-        echo 'Opening report in browser...'
-        xdg-open file://$indexFile
-      else
-        echo "File $indexFile not found."
-      fi
-    displayName: 'Open report in browser'
+      - name: Uninstall ReportGenerator tool
+        run: dotnet tool uninstall -g dotnet-reportgenerator-globaltool
+
+      - name: Open report in browser
+        run: |
+          indexFile=$(System.DefaultWorkingDirectory)/destination/Reports/index.html
+          if [ -f "$indexFile" ]; then
+            echo 'Opening report in browser...'
+            xdg-open file://$indexFile
+          else
+            echo "File $indexFile not found."
+          fi
