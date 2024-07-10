@@ -21,9 +21,9 @@ jobs:
         with:
           dotnet-version: '3.x'
 
-      - name: Install ReportGenerator tool
+      - name: Install ReportGenerator tool globally
         run: |
-          dotnet tool install -g dotnet-reportgenerator-globaltool --version 4.8.8 --tool-path $(find . -name ProjetoDeTeste.csproj -printf "%h\n" | head -n 1)/tools
+          dotnet tool install -g dotnet-reportgenerator-globaltool --version 4.8.8
           if [ $? -ne 0 ]; then
             echo "Failed to install dotnet-reportgenerator-globaltool"
             exit 1
@@ -37,7 +37,7 @@ jobs:
 
       - name: Find latest coverage file
         run: |
-          testResultsDir=$(find . -name ProjetoDeTeste.csproj -printf "%h\n" | head -n 1)/TestResults
+          testResultsDir=$(find . -name ProjetoDeTeste.csproj -printf "%h\n")/TestResults
           coverageFiles=$(find $testResultsDir -name 'coverage.cobertura.xml')
           if [ -z "$coverageFiles" ]; then
             echo 'Coverage file not found.'
@@ -47,13 +47,13 @@ jobs:
 
       - name: Generate HTML report
         run: |
-          reportOutput=$(find . -name ProjetoDeTeste.csproj -printf "%h\n" | head -n 1)/Reports
+          reportOutput=$(find . -name ProjetoDeTeste.csproj -printf "%h\n")/Reports
           dotnet reportgenerator "-reports:$reportInput" "-targetdir:$reportOutput" "-reporttypes:HTML"
 
       - name: Move directories
         run: |
-          mv $(find . -name ProjetoDeTeste.csproj -printf "%h\n" | head -n 1)/TestResults $(System.DefaultWorkingDirectory)/destination
-          mv $(find . -name ProjetoDeTeste.csproj -printf "%h\n" | head -n 1)/Reports $(System.DefaultWorkingDirectory)/destination
+          mv $(find . -name ProjetoDeTeste.csproj -printf "%h\n")/TestResults $(System.DefaultWorkingDirectory)/destination
+          mv $(find . -name ProjetoDeTeste.csproj -printf "%h\n")/Reports $(System.DefaultWorkingDirectory)/destination
 
       - name: Uninstall ReportGenerator tool
         run: dotnet tool uninstall -g dotnet-reportgenerator-globaltool
