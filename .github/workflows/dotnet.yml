@@ -36,6 +36,7 @@ jobs:
         run: dotnet test --configuration Release --collect:"XPlat Code Coverage" $(find . -name ProjetoDeTeste.csproj)
 
       - name: Find latest coverage file
+        id: find-coverage-file
         run: |
           testResultsDir=$(find . -name ProjetoDeTeste.csproj -printf "%h\n")/TestResults
           echo "Listing contents of TestResults directory:"
@@ -46,10 +47,12 @@ jobs:
             exit 1
           fi
           reportInput=$(ls -t $coverageFiles | head -n1)
+          echo "::set-output name=reportInput::$reportInput"
           echo "Latest coverage file found: $reportInput"
 
       - name: Generate HTML report
         run: |
+          reportInput=${{ steps.find-coverage-file.outputs.reportInput }}
           reportOutput=$(find . -name ProjetoDeTeste.csproj -printf "%h\n")/Reports
           ~/.dotnet/tools/reportgenerator "-reports:$reportInput" "-targetdir:$reportOutput" "-reporttypes:HTML"
 
