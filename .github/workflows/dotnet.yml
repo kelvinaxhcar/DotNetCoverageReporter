@@ -38,12 +38,15 @@ jobs:
       - name: Find latest coverage file
         run: |
           testResultsDir=$(find . -name ProjetoDeTeste.csproj -printf "%h\n")/TestResults
+          echo "Listing contents of TestResults directory:"
+          ls -R $testResultsDir
           coverageFiles=$(find $testResultsDir -name 'coverage.cobertura.xml')
           if [ -z "$coverageFiles" ]; then
             echo 'Coverage file not found.'
             exit 1
           fi
           reportInput=$(ls -t $coverageFiles | head -n1)
+          echo "Latest coverage file found: $reportInput"
 
       - name: Generate HTML report
         run: |
