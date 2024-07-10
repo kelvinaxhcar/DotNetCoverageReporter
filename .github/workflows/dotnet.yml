@@ -1,0 +1,60 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - task: UseDotNet@2
+    displayName: 'Use .NET SDK'
+    inputs:
+      packageType: 'sdk'
+      version: '3.x'
+
+  - script: dotnet tool install -g dotnet-reportgenerator-globaltool
+    displayName: 'Install ReportGenerator'
+
+  - script: dotnet build
+    displayName: 'Build project'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/path/to/your/project'
+
+  - script: dotnet test --collect:"XPlat Code Coverage"
+    displayName: 'Run tests with coverage'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/path/to/your/project'
+
+  - script: |
+      echo 'Searching for latest coverage file...'
+      testResultsDir=$(System.DefaultWorkingDirectory)/path/to/your/project/TestResults
+      coverageFiles=$(find $testResultsDir -name 'coverage.cobertura.xml')
+      if [ -z "$coverageFiles" ]; then
+        echo 'Coverage file not found.'
+        exit 1
+      fi
+      reportInput=$(ls -t $coverageFiles | head -n1)
+    displayName: 'Find latest coverage file'
+
+  - script: |
+      reportOutput=$(System.DefaultWorkingDirectory)/path/to/your/project/Reports
+      reportgenerator "-reports:$reportInput" "-targetdir:$reportOutput" "-reporttypes:HTML"
+    displayName: 'Generate HTML report'
+
+  - script: |
+      echo 'Moving TestResults and Reports directories...'
+      mv $(System.DefaultWorkingDirectory)/path/to/your/project/TestResults $(System.DefaultWorkingDirectory)/path/to/destination
+      mv $(System.DefaultWorkingDirectory)/path/to/your/project/Reports $(System.DefaultWorkingDirectory)/path/to/destination
+    displayName: 'Move directories'
+
+  - script: dotnet tool uninstall -g dotnet-reportgenerator-globaltool
+    displayName: 'Uninstall ReportGenerator'
+
+  - script: |
+      indexFile=$(System.DefaultWorkingDirectory)/path/to/destination/Reports/index.html
+      if [ -f "$indexFile" ]; then
+        echo 'Opening report in browser...'
+        xdg-open file://$indexFile
+      else
+        echo "File $indexFile not found."
+      fi
+    displayName: 'Open report in browser'
