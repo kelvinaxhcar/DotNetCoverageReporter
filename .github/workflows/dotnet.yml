@@ -13,44 +13,44 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout do repositório
         uses: actions/checkout@v2
 
-      - name: Setup .NET SDK
+      - name: Configurar SDK do .NET
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: '7.x'
 
-      - name: Install ReportGenerator tool globally
+      - name: Instalar ferramenta ReportGenerator globalmente
         run: |
           dotnet tool install -g dotnet-reportgenerator-globaltool --version 5.3.7
           if [ $? -ne 0 ]; then
-            echo "Failed to install dotnet-reportgenerator-globaltool"
+            echo "Falha ao instalar dotnet-reportgenerator-globaltool"
             exit 1
           fi
 
-      - name: Build project
+      - name: Compilar projeto
         run: dotnet build --configuration Release $(find . -name ProjetoDeTeste.csproj)
 
-      - name: Run tests with coverage
+      - name: Executar testes com cobertura
         run: dotnet test --configuration Release --collect:"XPlat Code Coverage" $(find . -name ProjetoDeTeste.csproj)
 
-      - name: Find latest coverage file
+      - name: Encontrar o arquivo de cobertura mais recente
         id: find-coverage-file
         run: |
           testResultsDir=$(find . -name ProjetoDeTeste.csproj -printf "%h\n")/TestResults
-          echo "Listing contents of TestResults directory:"
+          echo "Listando conteúdos do diretório TestResults:"
           ls -R $testResultsDir
           coverageFiles=$(find $testResultsDir -name 'coverage.cobertura.xml')
           if [ -z "$coverageFiles" ]; then
-            echo 'Coverage file not found.'
+            echo 'Arquivo de cobertura não encontrado.'
             exit 1
           fi
           reportInput=$(ls -t $coverageFiles | head -n1)
           echo "::set-output name=reportInput::$reportInput"
-          echo "Latest coverage file found: $reportInput"
+          echo "Arquivo de cobertura mais recente encontrado: $reportInput"
 
-      - name: Generate HTML report
+      - name: Gerar relatório HTML
         id: generate-report
         run: |
           reportInput=${{ steps.find-coverage-file.outputs.reportInput }}
@@ -58,11 +58,11 @@ jobs:
           ~/.dotnet/tools/reportgenerator "-reports:$reportInput" "-targetdir:$reportOutput" "-reporttypes:HTML"
           echo "::set-output name=reportOutput::$reportOutput"
 
-      - name: Uninstall ReportGenerator tool
+      - name: Desinstalar ferramenta ReportGenerator
         run: dotnet tool uninstall -g dotnet-reportgenerator-globaltool
 
-      - name: Upload coverage report
+      - name: Fazer upload do relatório de cobertura
         uses: actions/upload-artifact@v2
         with:
-          name: coverage-report
+          name: cobertura-relatorio
           path: ${{ steps.generate-report.outputs.reportOutput }}
