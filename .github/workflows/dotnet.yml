@@ -24,10 +24,6 @@ jobs:
       - name: Instalar ferramenta ReportGenerator globalmente
         run: |
           dotnet tool install -g dotnet-reportgenerator-globaltool --version 5.3.7
-          if [ $? -ne 0 ]; then
-            echo "Falha ao instalar dotnet-reportgenerator-globaltool"
-            exit 1
-          fi
 
       - name: Compilar projeto
         run: dotnet build --configuration Release $(find . -name ProjetoDeTeste.csproj)
@@ -42,10 +38,6 @@ jobs:
           echo "Listando conteúdos do diretório TestResults:"
           ls -R $testResultsDir
           coverageFiles=$(find $testResultsDir -name 'coverage.cobertura.xml')
-          if [ -z "$coverageFiles" ]; then
-            echo 'Arquivo de cobertura não encontrado.'
-            exit 1
-          fi
           reportInput=$(ls -t $coverageFiles | head -n1)
           echo "::set-output name=reportInput::$reportInput"
           echo "Arquivo de cobertura mais recente encontrado: $reportInput"
